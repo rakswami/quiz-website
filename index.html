@@ -1,171 +1,232 @@
-﻿<!DOCTYPE html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Unlimited Quiz Generator</title>
     <style>
+        /* Main Layout */
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #f5f5f5;
+            background-color: #f5f7fa;
+            line-height: 1.6;
         }
+        
         .quiz-container {
             background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        button {
-            background: #4285f4;
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 2.2em;
+        }
+        
+        /* Input Section */
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        #topic {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            transition: border-color 0.3s;
+        }
+        
+        #topic:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        
+        /* Buttons */
+        .btn {
+            background-color: #3498db;
             color: white;
             border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
             cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
         }
+        
+        .btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        /* Quiz Area */
+        #quiz-area {
+            margin-top: 30px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            font-size: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+            color: #3498db;
+        }
+        
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Questions */
         .question {
-            margin: 20px 0;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+        
+        .question:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .question h3 {
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        
+        /* Options */
+        .options {
+            display: grid;
+            gap: 10px;
+        }
+        
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .option:hover {
+            background-color: #e9ecef;
+        }
+        
+        .option input {
+            margin-right: 12px;
+            transform: scale(1.2);
+        }
+        
+        /* Explanations */
+        .explanation {
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 6px;
+            display: none;
+            background-color: #f8f9fa;
+            border-left: 4px solid #3498db;
+        }
+        
+        .explanation.show {
+            display: block;
+        }
+        
+        .correct .explanation {
+            border-left-color: #28a745;
+        }
+        
+        .incorrect .explanation {
+            border-left-color: #dc3545;
+        }
+        
+        /* Results */
+        .results {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .score {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 600px) {
+            .input-group {
+                flex-direction: column;
+            }
+            
+            #topic, .btn {
+                width: 100%;
+            }
+            
+            .question {
+                padding: 15px;
+            }
+        }
+        
+        /* Error States */
+        .error {
+            color: #dc3545;
+            padding: 15px;
+            background: #f8d7da;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .correct {
+            background-color: rgba(40, 167, 69, 0.1);
+        }
+        
+        .incorrect {
+            background-color: rgba(220, 53, 69, 0.1);
         }
     </style>
 </head>
 <body>
     <div class="quiz-container">
         <h1>Unlimited Quiz Generator</h1>
-        <input type="text" id="topic" placeholder="Enter any topic (e.g. Science, History)">
-        <button onclick="generateQuiz()">Generate Quiz</button>
+        
+        <div class="input-group">
+            <input type="text" id="topic" placeholder="Enter any topic (e.g. Science, History)" autocomplete="off">
+            <button class="btn" onclick="generateQuiz()">Generate Quiz</button>
+        </div>
         
         <div id="quiz-area"></div>
     </div>
 
-
     <script src="app.js"></script>
 </body>
-</html> 
-<head>
-  <!-- Other head elements (title, etc.) -->
-  <style>
-    /* Main styling */
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #f5f7fa;
-      line-height: 1.6;
-    }
-    
-    h1 {
-      color: #2c3e50;
-      text-align: center;
-      margin-bottom: 30px;
-      font-size: 2.2em;
-    }
-    
-    /* Input and button styling */
-    #topic {
-      width: 70%;
-      padding: 12px;
-      font-size: 16px;
-      border: 2px solid #ddd;
-      border-radius: 8px;
-      margin-right: 10px;
-    }
-    
-    button {
-      background-color: #3498db;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    
-    button:hover {
-      background-color: #2980b9;
-    }
-    
-    /* Quiz area styling */
-    #quiz-area {
-      margin-top: 30px;
-      background: white;
-      padding: 25px;
-      border-radius: 10px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    
-    .question {
-      margin-bottom: 25px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #eee;
-    }
-    
-    .question h3 {
-      color: #2c3e50;
-      margin-bottom: 15px;
-    }
-    
-    /* Options styling */
-    label {
-      display: block;
-      padding: 10px 15px;
-      margin: 8px 0;
-      background-color: #f8f9fa;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    
-    label:hover {
-      background-color: #e9ecef;
-    }
-    
-    input[type="radio"] {
-      margin-right: 10px;
-    }
-    
-    /* Explanation styling */
-    .explanation {
-      padding: 15px;
-      margin-top: 15px;
-      border-radius: 6px;
-      display: none;
-    }
-    
-    .explanation {
-      background-color: #f8f9fa;
-      border-left: 4px solid #3498db;
-    }
-    
-    /* Loading animation */
-    .loading {
-      text-align: center;
-      padding: 40px;
-    }
-    
-    .spinner {
-      font-size: 50px;
-      animation: spin 1s linear infinite;
-      margin-bottom: 20px;
-      color: #3498db;
-    }
-    
-    @keyframes spin {
-      100% { transform: rotate(360deg); }
-    }
-    
-    /* Responsive design */
-    @media (max-width: 600px) {
-      #topic {
-        width: 100%;
-        margin-bottom: 10px;
-      }
-      
-      button {
-        width: 100%;
-      }
-    }
-  </style>
-</head>
+</html>
