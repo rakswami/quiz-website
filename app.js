@@ -1,117 +1,125 @@
-// Dynamic Question Generator Engine
-const questionTemplates = {
-  general: [
-    {
-      template: "What is the primary function of {system} in {context}?",
-      variables: {
-        system: ["the circulatory system", "mitochondria", "the CPU", "a blockchain"],
-        context: ["the human body", "cells", "computers", "cryptocurrency"]
-      },
-      options: [
-        "a) {correct}",
-        "b) {wrong1}",
-        "c) {wrong2}",
-        "d) {wrong3}"
-      ],
-      answers: {
-        correct: ["Transporting blood", "Producing energy", "Processing instructions", "Recording transactions"],
-        wrong1: ["Filtering air", "Storing DNA", "Displaying graphics", "Mining gold"],
-        wrong2: ["Digesting food", "Creating proteins", "Storing memory", "Encrypting emails"],
-        wrong3: ["Producing hormones", "Generating heat", "Connecting to WiFi", "Predicting weather"]
-      }
-    },
-    {
-      template: "Which historical figure is known for {achievement}?",
-      variables: {
-        achievement: [
-          "inventing the telephone", 
-          "discovering penicillin",
-          "leading India's independence movement",
-          "developing the theory of relativity"
-        ]
-      },
-      options: [
-        "a) {correct}",
-        "b) {wrong1}",
-        "c) {wrong2}",
-        "d) {wrong3}"
-      ],
-      answers: {
-        correct: ["Alexander Graham Bell", "Alexander Fleming", "Mahatma Gandhi", "Albert Einstein"],
-        wrong1: ["Thomas Edison", "Marie Curie", "Winston Churchill", "Isaac Newton"],
-        wrong2: ["Nikola Tesla", "Louis Pasteur", "Nelson Mandela", "Stephen Hawking"],
-        wrong3: ["Guglielmo Marconi", "Joseph Lister", "Jawaharlal Nehru", "Niels Bohr"]
-      }
-    }
-  ]
+// Science Question Generator Engine
+const scienceQuestionBank = {
+  elements: {
+    template: "What is the chemical symbol for {element}?",
+    elements: ["Oxygen", "Hydrogen", "Carbon", "Nitrogen", "Sodium", "Gold", "Silver", "Iron"],
+    symbols: ["O", "H", "C", "N", "Na", "Au", "Ag", "Fe"],
+    distractors: ["He", "Ne", "Ca", "K", "Mg", "Cu", "Zn", "Pb"]
+  },
+  physics: {
+    template: "What is the unit of {measurement}?",
+    measurements: ["force", "energy", "power", "electric current"],
+    units: ["Newton (N)", "Joule (J)", "Watt (W)", "Ampere (A)"],
+    distractors: ["Pascal (Pa)", "Volt (V)", "Ohm (Ω)", "Hertz (Hz)"]
+  },
+  biology: {
+    template: "Which organelle is responsible for {function}?",
+    functions: ["energy production", "protein synthesis", "cellular digestion", "photosynthesis"],
+    organelles: ["mitochondria", "ribosomes", "lysosomes", "chloroplasts"],
+    distractors: ["nucleus", "golgi apparatus", "vacuole", "endoplasmic reticulum"]
+  }
 };
 
 let currentQuestions = [];
 
 function generateQuiz() {
-  const topic = document.getElementById('topic').value.trim();
-  if (!topic) {
-    alert("Please enter a topic!");
-    return;
-  }
-
-  // Generate dynamic questions
+  const topic = "science"; // Force science questions
   const questions = [];
-  const templatePool = [...questionTemplates.general];
   
+  // Generate 5 questions from different categories
+  const categories = Object.keys(scienceQuestionBank);
   for (let i = 0; i < 5; i++) {
-    if (templatePool.length === 0) break;
-    
-    const randomIndex = Math.floor(Math.random() * templatePool.length);
-    const template = templatePool[randomIndex];
-    templatePool.splice(randomIndex, 1); // Ensure uniqueness
-    
-    const question = generateQuestion(template, topic);
-    questions.push(question);
+    const category = categories[i % categories.length]; // Cycle through categories
+    questions.push(generateScienceQuestion(category));
   }
 
   currentQuestions = questions;
   displayQuiz(questions);
 }
 
-function generateQuestion(template, topic) {
-  // Select random variables
-  const selectedVars = {};
-  Object.keys(template.variables).forEach(key => {
-    const options = template.variables[key];
-    selectedVars[key] = options[Math.floor(Math.random() * options.length)];
-  });
+function generateScienceQuestion(category) {
+  const bank = scienceQuestionBank[category];
+  const index = Math.floor(Math.random() * bank.elements.length);
+  
+  // Get correct answer and distractors
+  const correct = category === 'elements' 
+    ? bank.symbols[index] 
+    : category === 'physics' 
+      ? bank.units[index] 
+      : bank.organelles[index];
+  
+  const questionText = bank.template.replace(
+    `{${category === 'elements' ? 'element' : category === 'physics' ? 'measurement' : 'function'}}`,
+    category === 'elements' 
+      ? bank.elements[index] 
+      : category === 'physics' 
+        ? bank.measurements[index] 
+        : bank.functions[index]
+  );
 
-  // Prepare answer options
-  const answerKey = {};
-  Object.keys(template.answers).forEach(key => {
-    const options = template.answers[key];
-    answerKey[key] = options[Math.floor(Math.random() * options.length)];
-  });
-
-  // Build question text
-  let questionText = template.template;
-  for (const [key, value] of Object.entries(selectedVars)) {
-    questionText = questionText.replace(`{${key}}`, value);
+  // Prepare options
+  const options = [];
+  options.push(`a) ${correct}`);
+  
+  // Add 3 unique distractors
+  const usedIndices = new Set();
+  while (options.length < 4) {
+    const randomIndex = Math.floor(Math.random() * bank.distractors.length);
+    if (!usedIndices.has(randomIndex)) {
+      usedIndices.add(randomIndex);
+      options.push(
+        `${String.fromCharCode(98 + options.length - 1)}) ${bank.distractors[randomIndex]}`
+      );
+    }
   }
 
-  // Build options
-  const options = template.options.map(opt => {
-    let optionText = opt;
-    for (const [key, value] of Object.entries(answerKey)) {
-      optionText = optionText.replace(`{${key}}`, value);
-    }
-    return optionText;
-  });
+  // Shuffle options
+  for (let i = options.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [options[i], options[j]] = [options[j], options[i]];
+  }
+
+  // Find new index of correct answer
+  const correctOption = options.findIndex(opt => opt.includes(correct));
+  const answer = String.fromCharCode(97 + correctOption);
 
   return {
     question: questionText,
     options: options,
-    answer: "a", // First option is always correct in this template
-    explanation: `This question relates to ${topic}. The correct answer is ${answerKey.correct} because...`
+    answer: answer,
+    explanation: `The correct answer is ${correct}. ${getExplanation(category, index)}`
   };
 }
 
+function getExplanation(category, index) {
+  const explanations = {
+    elements: [
+      "Oxygen is essential for respiration.",
+      "Hydrogen is the lightest element.",
+      "Carbon is the basis of organic chemistry.",
+      "Nitrogen makes up 78% of Earth's atmosphere.",
+      "Sodium is a highly reactive alkali metal.",
+      "Gold has been valued since ancient times.",
+      "Silver has the highest electrical conductivity.",
+      "Iron is crucial for hemoglobin in blood."
+    ],
+    physics: [
+      "Force is measured in Newtons (F=ma).",
+      "Energy is measured in Joules (work done).",
+      "Power is the rate of energy transfer.",
+      "Current is the flow of electric charge."
+    ],
+    biology: [
+      "Mitochondria are the powerhouse of the cell.",
+      "Ribosomes synthesize proteins from amino acids.",
+      "Lysosomes break down waste materials.",
+      "Chloroplasts convert light energy to chemical energy."
+    ]
+  };
+  return explanations[category][index];
+}
+
+// Rest of your existing displayQuiz and checkAnswers functions remain the same
 function displayQuiz(questions) {
   let html = '';
   questions.forEach((q, i) => {
