@@ -1,77 +1,115 @@
-// Configuration
-const API_KEY = "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"; // Replace with your actual key
-const QUESTIONS_COUNT = 5;
+// Dynamic Question Generator Engine
+const questionTemplates = {
+  general: [
+    {
+      template: "What is the primary function of {system} in {context}?",
+      variables: {
+        system: ["the circulatory system", "mitochondria", "the CPU", "a blockchain"],
+        context: ["the human body", "cells", "computers", "cryptocurrency"]
+      },
+      options: [
+        "a) {correct}",
+        "b) {wrong1}",
+        "c) {wrong2}",
+        "d) {wrong3}"
+      ],
+      answers: {
+        correct: ["Transporting blood", "Producing energy", "Processing instructions", "Recording transactions"],
+        wrong1: ["Filtering air", "Storing DNA", "Displaying graphics", "Mining gold"],
+        wrong2: ["Digesting food", "Creating proteins", "Storing memory", "Encrypting emails"],
+        wrong3: ["Producing hormones", "Generating heat", "Connecting to WiFi", "Predicting weather"]
+      }
+    },
+    {
+      template: "Which historical figure is known for {achievement}?",
+      variables: {
+        achievement: [
+          "inventing the telephone", 
+          "discovering penicillin",
+          "leading India's independence movement",
+          "developing the theory of relativity"
+        ]
+      },
+      options: [
+        "a) {correct}",
+        "b) {wrong1}",
+        "c) {wrong2}",
+        "d) {wrong3}"
+      ],
+      answers: {
+        correct: ["Alexander Graham Bell", "Alexander Fleming", "Mahatma Gandhi", "Albert Einstein"],
+        wrong1: ["Thomas Edison", "Marie Curie", "Winston Churchill", "Isaac Newton"],
+        wrong2: ["Nikola Tesla", "Louis Pasteur", "Nelson Mandela", "Stephen Hawking"],
+        wrong3: ["Guglielmo Marconi", "Joseph Lister", "Jawaharlal Nehru", "Niels Bohr"]
+      }
+    }
+  ]
+};
+
 let currentQuestions = [];
 
-async function generateQuiz() {
+function generateQuiz() {
   const topic = document.getElementById('topic').value.trim();
   if (!topic) {
-    showError("Please enter a topic!");
+    alert("Please enter a topic!");
     return;
   }
 
-  showLoading(topic);
-
-  try {
-    const questions = await fetchAIQuestions(topic);
-    if (questions.length === 0) throw new Error("No questions generated");
-    currentQuestions = questions;
-    displayQuiz(questions);
-  } catch (error) {
-    console.error("Generation error:", error);
-    showError(`Failed to generate quiz. Try a different topic.`);
+  // Generate dynamic questions
+  const questions = [];
+  const templatePool = [...questionTemplates.general];
+  
+  for (let i = 0; i < 5; i++) {
+    if (templatePool.length === 0) break;
+    
+    const randomIndex = Math.floor(Math.random() * templatePool.length);
+    const template = templatePool[randomIndex];
+    templatePool.splice(randomIndex, 1); // Ensure uniqueness
+    
+    const question = generateQuestion(template, topic);
+    questions.push(question);
   }
+
+  currentQuestions = questions;
+  displayQuiz(questions);
 }
 
-async function fetchAIQuestions(topic) {
-  // Unique prompt to prevent cached responses
-  const prompt = `Generate ${QUESTIONS_COUNT} FRESH multiple-choice questions about ${topic} 
-  as of ${new Date().toISOString()}. Format EXACTLY like this example:
-  
-  [{
-    "question": "What is...?",
-    "options": ["a) Option 1", "b) Option 2", "c) Option 3", "d) Option 4"],
-    "answer": "a",
-    "explanation": "Clear 1-sentence explanation"
-  }]
-  
-  Rules:
-  1. ALWAYS return valid JSON
-  2. Questions MUST be unique
-  3. Options should be plausible
-  4. Never repeat questions`;
-
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${API_KEY}`
-    },
-    body: JSON.stringify({
-      model: "gpt-3.5-turbo",
-      messages: [{
-        role: "user",
-        content: prompt
-      }],
-      temperature: 0.9, // Higher for more variety
-      frequency_penalty: 0.7, // Reduces repetition
-      presence_penalty: 0.7 // Encourages novelty
-    })
+function generateQuestion(template, topic) {
+  // Select random variables
+  const selectedVars = {};
+  Object.keys(template.variables).forEach(key => {
+    const options = template.variables[key];
+    selectedVars[key] = options[Math.floor(Math.random() * options.length)];
   });
 
-  const data = await response.json();
-  let content;
-  
-  // Handle different response formats
-  try {
-    content = JSON.parse(data.choices[0].message.content);
-  } catch {
-    // Fallback for malformed JSON
-    const match = data.choices[0].message.content.match(/\[.*\]/s);
-    content = match ? JSON.parse(match[0]) : [];
+  // Prepare answer options
+  const answerKey = {};
+  Object.keys(template.answers).forEach(key => {
+    const options = template.answers[key];
+    answerKey[key] = options[Math.floor(Math.random() * options.length)];
+  });
+
+  // Build question text
+  let questionText = template.template;
+  for (const [key, value] of Object.entries(selectedVars)) {
+    questionText = questionText.replace(`{${key}}`, value);
   }
-  
-  return Array.isArray(content) ? content : [content];
+
+  // Build options
+  const options = template.options.map(opt => {
+    let optionText = opt;
+    for (const [key, value] of Object.entries(answerKey)) {
+      optionText = optionText.replace(`{${key}}`, value);
+    }
+    return optionText;
+  });
+
+  return {
+    question: questionText,
+    options: options,
+    answer: "a", // First option is always correct in this template
+    explanation: `This question relates to ${topic}. The correct answer is ${answerKey.correct} because...`
+  };
 }
 
 function displayQuiz(questions) {
@@ -96,13 +134,24 @@ function displayQuiz(questions) {
   
   html += `
     <button onclick="checkAnswers()">Check Answers</button>
-    <button onclick="generateQuiz()">New Quiz</button>
+    <button onclick="generateQuiz()">Generate New Quiz</button>
   `;
   
   document.getElementById('quiz-area').innerHTML = html;
 }
 
-// Helper functions remain the same as previous version
-function checkAnswers() { /* ... */ }
-function showLoading(topic) { /* ... */ }
-function showError(message) { /* ... */ }
+function checkAnswers() {
+  currentQuestions.forEach((q, i) => {
+    const selected = document.querySelector(`input[name="q${i}"]:checked`);
+    const explanation = document.querySelectorAll('.explanation')[i];
+    
+    if (selected) {
+      explanation.style.display = 'block';
+      if (selected.value === q.answer) {
+        explanation.style.backgroundColor = '#e6ffe6';
+      } else {
+        explanation.style.backgroundColor = '#ffe6e6';
+      }
+    }
+  });
+}
