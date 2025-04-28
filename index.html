@@ -1,232 +1,249 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unlimited Quiz Generator</title>
+    <title>AI Quiz Generator</title>
     <style>
-        /* Main Layout */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
             background-color: #f5f7fa;
-            line-height: 1.6;
         }
-        
-        .quiz-container {
+        .chat-container {
             background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        
-        h1 {
-            color: #2c3e50;
-            text-align: center;
-            margin-bottom: 25px;
-            font-size: 2.2em;
-        }
-        
-        /* Input Section */
-        .input-group {
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            height: 70vh;
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
+            flex-direction: column;
         }
-        
-        #topic {
+        #chat-area {
             flex: 1;
-            min-width: 200px;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .input-area {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #eee;
+        }
+        #user-input {
+            flex: 1;
             padding: 12px;
-            font-size: 16px;
             border: 2px solid #ddd;
             border-radius: 8px;
-            transition: border-color 0.3s;
+            font-size: 16px;
         }
-        
-        #topic:focus {
-            border-color: #3498db;
-            outline: none;
-        }
-        
-        /* Buttons */
-        .btn {
-            background-color: #3498db;
+        #send-btn {
+            background: #4361ee;
             color: white;
             border: none;
-            padding: 12px 24px;
+            padding: 0 25px;
             border-radius: 8px;
+            margin-left: 10px;
+            cursor: pointer;
             font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s;
-            white-space: nowrap;
         }
-        
-        .btn:hover {
-            background-color: #2980b9;
-            transform: translateY(-2px);
-        }
-        
-        .btn-secondary {
-            background-color: #6c757d;
-        }
-        
-        .btn-secondary:hover {
-            background-color: #5a6268;
-        }
-        
-        /* Quiz Area */
-        #quiz-area {
-            margin-top: 30px;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 40px;
-        }
-        
-        .spinner {
-            font-size: 50px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-            color: #3498db;
-        }
-        
-        @keyframes spin {
-            100% { transform: rotate(360deg); }
-        }
-        
-        /* Questions */
-        .question {
-            margin-bottom: 30px;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            transition: all 0.3s;
-        }
-        
-        .question:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        
-        .question h3 {
-            color: #2c3e50;
-            margin-top: 0;
+        .message {
             margin-bottom: 15px;
-        }
-        
-        /* Options */
-        .options {
-            display: grid;
-            gap: 10px;
-        }
-        
-        .option {
-            display: flex;
-            align-items: center;
             padding: 12px 15px;
-            background-color: #f8f9fa;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .option:hover {
-            background-color: #e9ecef;
-        }
-        
-        .option input {
-            margin-right: 12px;
-            transform: scale(1.2);
-        }
-        
-        /* Explanations */
-        .explanation {
-            padding: 15px;
-            margin-top: 15px;
-            border-radius: 6px;
-            display: none;
-            background-color: #f8f9fa;
-            border-left: 4px solid #3498db;
-        }
-        
-        .explanation.show {
-            display: block;
-        }
-        
-        .correct .explanation {
-            border-left-color: #28a745;
-        }
-        
-        .incorrect .explanation {
-            border-left-color: #dc3545;
-        }
-        
-        /* Results */
-        .results {
-            text-align: center;
-            padding: 20px;
-            margin-top: 30px;
-            background: #f8f9fa;
             border-radius: 8px;
+            max-width: 80%;
         }
-        
-        .score {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 10px;
+        .user-message {
+            background: #e3f2fd;
+            margin-left: auto;
         }
-        
-        /* Responsive */
-        @media (max-width: 600px) {
-            .input-group {
-                flex-direction: column;
-            }
-            
-            #topic, .btn {
-                width: 100%;
-            }
-            
-            .question {
-                padding: 15px;
-            }
+        .bot-message {
+            background: #f1f1f1;
+            margin-right: auto;
         }
-        
-        /* Error States */
-        .error {
-            color: #dc3545;
+        .quiz-question {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
             padding: 15px;
-            background: #f8d7da;
-            border-radius: 6px;
-            margin-bottom: 20px;
+            margin-top: 10px;
         }
-        
-        .correct {
-            background-color: rgba(40, 167, 69, 0.1);
+        .options {
+            margin: 10px 0;
         }
-        
-        .incorrect {
-            background-color: rgba(220, 53, 69, 0.1);
+        .option {
+            display: block;
+            padding: 8px 12px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .explanation {
+            display: none;
+            padding: 10px;
+            margin-top: 10px;
+            background: #e8f5e9;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .typing-indicator {
+            display: inline-block;
+            padding-left: 5px;
+        }
+        .typing-indicator span {
+            animation: bounce 1.5s infinite;
+            display: inline-block;
+            margin-left: 2px;
+        }
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
         }
     </style>
 </head>
 <body>
-    <div class="quiz-container">
-        <h1>Unlimited Quiz Generator</h1>
-        
-        <div class="input-group">
-            <input type="text" id="topic" placeholder="Enter any topic (e.g. Science, History)" autocomplete="off">
-            <button class="btn" onclick="generateQuiz()">Generate Quiz</button>
+    <div class="chat-container">
+        <div id="chat-area"></div>
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="Ask for a quiz on any topic (e.g. 'Give me 5 MCQs about Python')" autocomplete="off">
+            <button id="send-btn">Send</button>
         </div>
-        
-        <div id="quiz-area"></div>
     </div>
 
-    <script src="app.js"></script>
+    <script>
+        const chatArea = document.getElementById('chat-area');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+
+        // Add message to chat
+        function addMessage(sender, message, isQuiz = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            
+            if (isQuiz) {
+                messageDiv.innerHTML = `
+                    <div><strong>Quiz Generated:</strong></div>
+                    ${message}
+                `;
+            } else {
+                messageDiv.textContent = message;
+            }
+            
+            chatArea.appendChild(messageDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        // Show typing indicator
+        function showTyping() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message bot-message';
+            typingDiv.id = 'typing-indicator';
+            typingDiv.innerHTML = 'Generating quiz <span class="typing-indicator"><span>.</span><span>.</span><span>.</span></span>';
+            chatArea.appendChild(typingDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        // Hide typing indicator
+        function hideTyping() {
+            const typingDiv = document.getElementById('typing-indicator');
+            if (typingDiv) typingDiv.remove();
+        }
+
+        // Generate quiz HTML
+        function generateQuizHTML(questions) {
+            let html = '';
+            questions.forEach((q, i) => {
+                html += `
+                    <div class="quiz-question">
+                        <div class="question"><strong>${i+1}. ${q.question}</strong></div>
+                        <div class="options">
+                            ${q.options.map(opt => `
+                                <div class="option">
+                                    <input type="radio" name="q${i}" id="q${i}_${opt.charAt(0)}" value="${opt.charAt(0)}">
+                                    <label for="q${i}_${opt.charAt(0)}">${opt}</label>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="explanation">
+                            <strong>Answer:</strong> ${q.answer.toUpperCase()}<br>
+                            ${q.explanation}
+                        </div>
+                    </div>
+                `;
+            });
+            return html;
+        }
+
+        // Check answers
+        function checkAnswers(questions) {
+            questions.forEach((q, i) => {
+                const selected = document.querySelector(`input[name="q${i}"]:checked`);
+                const explanation = document.querySelectorAll('.explanation')[i];
+                if (selected && explanation) {
+                    explanation.style.display = 'block';
+                    explanation.style.backgroundColor = selected.value === q.answer ? '#e8f5e9' : '#ffebee';
+                }
+            });
+        }
+
+        // Generate sample quiz (replace with API call)
+        function generateSampleQuiz(topic) {
+            return [
+                {
+                    question: `What is the basic syntax for a ${topic} loop?`,
+                    options: ["a) for i in range(10)", "b) loop (i < 10)", "c) for (i = 0; i < 10; i++)", "d) repeat 10 times"],
+                    answer: "a",
+                    explanation: `In ${topic}, the 'for' loop uses the syntax 'for item in sequence'.`
+                },
+                {
+                    question: `Which keyword defines a ${topic} function?`,
+                    options: ["a) func", "b) def", "c) function", "d) define"],
+                    answer: "b",
+                    explanation: `In ${topic}, functions are defined using the 'def' keyword.`
+                }
+            ];
+        }
+
+        // Handle user input
+        function handleUserInput() {
+            const userMessage = userInput.value.trim();
+            if (!userMessage) return;
+            
+            addMessage('user', userMessage);
+            userInput.value = '';
+            
+            showTyping();
+            
+            // Simulate API response (replace with actual API call)
+            setTimeout(() => {
+                hideTyping();
+                
+                const topic = userMessage.includes('about') 
+                    ? userMessage.split('about')[1].trim() 
+                    : userMessage;
+                
+                const questions = generateSampleQuiz(topic);
+                const quizHTML = generateQuizHTML(questions);
+                
+                addMessage('bot', quizHTML, true);
+                
+                // Add event listeners to radio buttons
+                document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                    radio.addEventListener('change', () => checkAnswers(questions));
+                });
+            }, 1500);
+        }
+
+        // Event listeners
+        sendBtn.addEventListener('click', handleUserInput);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleUserInput();
+        });
+    </script>
 </body>
 </html>
